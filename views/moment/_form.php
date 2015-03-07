@@ -17,6 +17,7 @@ use dosamigos\datetimepicker\DateTimePicker;
 
     <?= $form->field($model, 'longitude')->textInput() ?>
 
+    <strong>Start At</strong>
     <?= DateTimePicker::widget([
         'model' => $model,
         'attribute' => 'start_at',
@@ -33,7 +34,7 @@ use dosamigos\datetimepicker\DateTimePicker;
             //'initialDate'=> time(),            
         ]
     ]);?>
-    <?= $form->field($model, 'start_at')->textInput() ?>
+    <br />
 
     <?= $form->field($model, 'duration')->textInput() ?>
 

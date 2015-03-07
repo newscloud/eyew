@@ -61,9 +61,19 @@ class MomentController extends Controller
     public function actionCreate()
     {
         $model = new Moment();
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+         if ($model->load(Yii::$app->request->post())) {
+            // convert date time to timestamp
+            $model->start_at = strtotime($model->start_at);
+            // validate the form against model rules
+            if ($model->validate()) {
+                // all inputs are valid
+                $model->save();              
+                return $this->redirect(['view', 'id' => $model->id]);
+            } else {
+              return $this->render('create', [
+                  'model' => $model,
+              ]);
+            }
         } else {
             return $this->render('create', [
                 'model' => $model,
