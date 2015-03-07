@@ -64,6 +64,8 @@ class MomentController extends Controller
          if ($model->load(Yii::$app->request->post())) {
             // convert date time to timestamp
             $model->start_at = strtotime($model->start_at);
+            // adjust for GMT
+            $model->start_at+=(3600*8);
             // validate the form against model rules
             if ($model->validate()) {
                 // all inputs are valid

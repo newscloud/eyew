@@ -16,6 +16,7 @@ class m150307_194739_create_moment_table extends Migration
             'id' => Schema::TYPE_PK,
             'latitude' => Schema::TYPE_FLOAT.' NOT NULL DEFAULT 0',
             'longitude' => Schema::TYPE_FLOAT.' NOT NULL DEFAULT 0',
+            'distance' => Schema::TYPE_FLOAT.' NOT NULL DEFAULT 0',
             'start_at' => Schema::TYPE_INTEGER . ' NOT NULL DEFAULT 0',
             'duration' => Schema::TYPE_INTEGER . ' NOT NULL DEFAULT 0',
             'created_at' => Schema::TYPE_INTEGER . ' NOT NULL',

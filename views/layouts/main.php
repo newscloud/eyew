@@ -35,7 +35,6 @@ AppAsset::register($this);
             echo Nav::widget([
                 'options' => ['class' => 'navbar-nav navbar-right'],
                 'items' => [
-                    ['label' => 'Home', 'url' => ['/site/index']],
                     ['label' => 'Moments', 'url' => ['/moment']],
                     ['label' => 'About', 'url' => 'http://code.tutsplus.com/tutorials/using-social-media-to-locate-eyewitnesses-to-important-events--cms-23563'],
                     ['label' => 'Contact', 'url' => 'http://lookahead.io/contact/'],
