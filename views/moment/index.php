@@ -30,6 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'dataProvider' => $dataProvider,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
+            'friendly',
             'latitude',
             'longitude',
             'distance',
