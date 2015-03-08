@@ -34,28 +34,5 @@ class PeekController extends \yii\web\Controller
       }
     }
     
-    public function actionInstagram()
-    {
-        $instagram = new Instagram\Instagram;
-        $instagram->setAccessToken( '1742382410.4de1c75.9ae21b41aa1548db8e1dda95739541d2' );
-        //$current_user = $instagram->getCurrentUser();
-        //var_dump($current_user);die();
-        //$instagram->setClientID( '4de1c75008cc4237a6fd4d44386c62d7' );
-        $params = array('min_timestamp'=>1424308000,'max_timestamp'=>1424311600,'distance'=>50);
-        $media = $instagram->searchMedia( 47.614264, -122.328008,$params ); 
-        foreach ($media as $m) {
-          //print_r($m);
-          echo $m->user->username.'<br />';
-          //echo $m->user->full_name.'<br />';
-          if (isset($m->caption->text)) {
-            echo $m->caption->text.'<br />'; 
-          }
-          echo $m->link.'<br />';
-          echo $m->created_time.'<br />';
-          echo '<img src="'.$m->images->thumbnail->url.'" />';
-          echo '<br /><br />';
-        }
-        return $this->render('instagram');
-    }
 
 }
