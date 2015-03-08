@@ -14,6 +14,7 @@ class m150307_194739_create_moment_table extends Migration
 
         $this->createTable('{{%moment}}', [
             'id' => Schema::TYPE_PK,
+            'friendly' => Schema::TYPE_STRING . ' NOT NULL DEFAULT 0',                          
             'latitude' => Schema::TYPE_FLOAT.' NOT NULL DEFAULT 0',
             'longitude' => Schema::TYPE_FLOAT.' NOT NULL DEFAULT 0',
             'distance' => Schema::TYPE_FLOAT.' NOT NULL DEFAULT 0',

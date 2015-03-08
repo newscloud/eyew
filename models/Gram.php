@@ -5,7 +5,7 @@ namespace app\models;
 use Yii;
 use yii\db\ActiveRecord;
 /**
- * This is the model class for table "Instagram".
+ * This is the model class for table "Gram".
  *
  * @property integer $id
  * @property integer $moment_id
@@ -19,14 +19,14 @@ use yii\db\ActiveRecord;
  *
  * @property Moment $moment
  */
-class Instagram extends \yii\db\ActiveRecord
+class Gram extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'Instagram';
+        return 'Gram';
     }
 
     public function behaviors()
@@ -47,7 +47,7 @@ class Instagram extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['moment_id', 'text', 'created_time'], 'required'],
+            [['moment_id',  'created_time'], 'required'],
             [['moment_id', 'created_time', 'created_at', 'updated_at'], 'integer'],
             [['text'], 'string'],
             [['username', 'link', 'image_url'], 'string', 'max' => 255]
@@ -79,4 +79,18 @@ class Instagram extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Moment::className(), ['id' => 'moment_id']);
     }
+    
+    public function add($moment_id,$username,$link,$created_time,$image_url,$text) {
+      if (!Gram::find()->where(['moment_id' => $moment_id])->andWhere(['link'=>$link])->andWhere(['created_time'=>$created_time])->exists()) {
+        $i = new Gram();
+        $i->moment_id = $moment_id;
+        $i->username = $username;
+        $i->link = $link;
+        $i->created_time = $created_time;
+        $i->image_url = $image_url;
+        $i->text = $text;        
+        $i->save();        
+      }
+    }
+    
 }

@@ -38,11 +38,13 @@ AppAsset::register($this);
                     ['label' => 'Moments', 'url' => ['/moment']],
                     ['label' => 'About', 'url' => 'http://code.tutsplus.com/tutorials/using-social-media-to-locate-eyewitnesses-to-important-events--cms-23563'],
                     ['label' => 'Contact', 'url' => 'http://lookahead.io/contact/'],
+/*
                     Yii::$app->user->isGuest ?
                         ['label' => 'Login', 'url' => ['/site/login']] :
                         ['label' => 'Logout (' . Yii::$app->user->identity->username . ')',
                             'url' => ['/site/logout'],
                             'linkOptions' => ['data-method' => 'post']],
+                            */
                 ],
             ]);
             NavBar::end();
@@ -58,11 +60,11 @@ AppAsset::register($this);
 
     <footer class="footer">
         <div class="container">
-            <p class="pull-left">&copy; My Company <?= date('Y') ?></p>
-            <p class="pull-right"><?= Yii::powered() ?></p>
+        <p class="pull-left"><? echo Html::a('&copy; Lookahead Consulting '.date('Y'),'http://lookahead.io'); ?></p>
+        <p class="pull-right"><?= Html::a('Follow @reifman','https://twitter.com/intent/user?screen_name=reifman') ?></p>
         </div>
     </footer>
-
+    
 <?php $this->endBody() ?>
 </body>
 </html>

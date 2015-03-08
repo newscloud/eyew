@@ -5,9 +5,11 @@ namespace app\controllers;
 use Yii;
 use app\models\Moment;
 use app\models\MomentSearch;
+use app\models\Gram;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\data\ActiveDataProvider;
 
 /**
  * MomentController implements the CRUD actions for Moment model.
@@ -53,6 +55,31 @@ class MomentController extends Controller
         ]);
     }
 
+    public function actionBrowse($id)
+    {
+      // browse instagram results for moment $id
+      $dataProvider = new ActiveDataProvider([
+          'query' => Gram::find()->where(['moment_id'=>$id])->orderBy('created_time ASC')
+      ]);
+
+      return $this->render('browse', [
+          'dataProvider' => $dataProvider,
+          'moment_id'=>$id,
+      ]);
+    }
+    public function actionPurge($id)
+    {
+        Moment::purge($id);
+        Yii::$app->session->setFlash('success', 'Results purged successfully.');
+         return $this->redirect('index');
+    }
+    
+    public function actionInstagram($id)
+      {
+          $model = $this->findModel($id);
+          $model->searchInstagram();
+          return $this->redirect(['browse', 'id' => $model->id]);  
+      }
     /**
      * Creates a new Moment model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -92,9 +119,29 @@ class MomentController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        $original_date = $model->start_at;
+        if (is_numeric($model->start_at)) {
+          $model->start_picker_at = $model->start_at;
+          $model->start_at = date('D, d M Y H:i:s O',$model->start_at);
+        }
+        // convert date time to timestamp
+        if ($model->load(Yii::$app->request->post())) {
+          // convert date time to timestamp
+          $model->start_at = strtotime($model->start_at);
+          if ($model->start_at <> $original_date) {
+            // if new date selected, adjust for GMT
+            $model->start_at+=(3600*8);
+          }
+          // validate the form against model rules
+          if ($model->validate()) {
+              // all inputs are valid
+              $model->save();              
+            return $this->redirect(['index']);
+          } else {
+              return $this->render('update', [
+                  'model' => $model,
+              ]);
+          }
         } else {
             return $this->render('update', [
                 'model' => $model,
@@ -130,4 +177,6 @@ class MomentController extends Controller
             throw new NotFoundHttpException('The requested page does not exist.');
         }
     }
+    
+     
 }

@@ -13,12 +13,13 @@ use dosamigos\datetimepicker\DateTimePicker;
 <div class="moment-form">
 
     <?php $form = ActiveForm::begin(); ?>
+    <?= $form->field($model, 'friendly')->textInput(['maxlength' => 255])->label('Description')->hint('Use a friendly descriptor for this moment e.g. Fireworks July 4th, 2014') ?>
 
     <?= $form->field($model, 'latitude')->textInput() ?>
 
     <?= $form->field($model, 'longitude')->textInput() ?>
 
-    <?= $form->field($model, 'distance')->textInput() ?>
+    <?= $form->field($model, 'distance')->textInput()->hint('Specify distance in meters.') ?>
 
     <strong>Start At</strong>
     <?= DateTimePicker::widget([
@@ -32,13 +33,11 @@ use dosamigos\datetimepicker\DateTimePicker;
             'todayBtn' => true,
             'minuteStep'=> 15, 
             'pickerPosition' => 'bottom-left',
-            // to do - format one day ahead
-            //'startDate'=> "2013-02-14 10:00",
-            //'initialDate'=> time(),            
         ]
     ]);?>
+    <div class="hint-block"><strong>Note:</strong> Select date in PST timezone.</div>
+    
     <br />
-
     <?= $form->field($model, 'duration')
              ->dropDownList(
                  $model->getDurationOptions()   
