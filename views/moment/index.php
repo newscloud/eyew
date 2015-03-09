@@ -37,8 +37,11 @@ $this->params['breadcrumbs'][] = $this->title;
             'start_at',
             'duration',
             ['class' => 'yii\grid\ActionColumn',
-				      'template'=>'{instagram} {update} {delete} {purge}',
+				      'template'=>'{twitter} {instagram} {update} {delete} {purge}',
 					    'buttons'=>[
+              'twitter' => function ($url, $model) {     
+                return Html::a('<span class="glyphicon glyphicon-fire"></span>', '/eyew/moment/twitter?id='.$model->id, ['title' => 'Search Twitter',]);	
+					      },
               'instagram' => function ($url, $model) {     
                 return Html::a('<span class="glyphicon glyphicon-camera"></span>', '/eyew/moment/instagram?id='.$model->id, ['title' => 'Search Instagram',]);	
 					      },

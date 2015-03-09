@@ -6,6 +6,7 @@ use Yii;
 use yii\db\ActiveRecord;
 use app\models\Gram;
 use Instagram;
+use TwitterAPIExchange;
 
 /**
  * This is the model class for table "Moment".
@@ -57,6 +58,11 @@ class Moment extends \yii\db\ActiveRecord
     public function getGrams()
     {
         return $this->hasMany(Gram::className(), ['moment_id' => 'id']);
+    }
+
+    public function getTwitters()
+    {
+        return $this->hasMany(Twitter::className(), ['moment_id' => 'id']);
     }
     
     /**
@@ -126,9 +132,84 @@ class Moment extends \yii\db\ActiveRecord
         $i = new Gram();           $i->add($this->id,$m->user->username,$m->link,$m->created_time,$m->images->thumbnail->url,$caption);
        }
      }
-
+     
+     public function searchTwitter() {
+       // Load your Twitter application keys
+       $settings = array(
+           'oauth_access_token' => \Yii::$app->params['twitter']['oauth_token'],
+           'oauth_access_token_secret' => \Yii::$app->params['twitter']['oauth_secret'],
+           'consumer_key' => \Yii::$app->params['twitter']['key'],
+           'consumer_secret' => \Yii::$app->params['twitter']['secret'],
+       );
+       // Connect to Twitter 
+       $twitter = new TwitterAPIExchange($settings);
+       // Query settings for search
+       $url = 'https://api.twitter.com/1.1/search/tweets.json';
+       $requestMethod = 'GET';
+       // rate limit of 180 queries
+       $limit = 180;
+       $query_count=1;
+       $count = 100;
+       $result_type = 'recent';
+       // calculate valid timestamp range
+       $valid_start = $this->start_at;
+       // $until_date and $valid_end = // start time + duration
+       $valid_end = $this->start_at + ($this->duration*60);
+       $until_date = date('Y-m-d',$valid_end); 
+       $distance_km = $this->distance/1000; // distance in km
+       // Unused: &since=$since_date
+       // $since_date = '2015-03-05'; 
+       // Perform first query with until_date
+       $getfield ="?result_type=$result_type&geocode=".$this->latitude.",".$this->longitude.",".$distance_km."mi&include_entities=false&until=$until_date&count=$count";
+       $tweets = json_decode($twitter->setGetfield($getfield)
+                    ->buildOauth($url, $requestMethod)
+                    ->performRequest());
+                  var_dump($tweets);
+                  die();
+       $max_id = 0;
+       echo 'Count Statuses: '.count($tweets->statuses).'<br>';
+       echo 'Max Tweet Id: '.$max_id.'<br>';
+       foreach ($tweets->statuses as $t) {
+         // check if tweet in valid time range
+         if ($t->created_at >= $valid_start && $t->created_at <= $valid_end)
+         {
+           // print_r($t);echo "<br><br>";                  
+            $i = new Twitter();           $i->add($this->id,$t->id_str,$t->user->id_str,$t->user->screen_name,$t->created_at,(isset($t->text)?$t->text:''));
+         }
+         if ($max_id ==0) {
+           $max_id = intval($t->id_str);
+         } else {
+           $max_id = min($max_id, intval($t->id_str));
+         }
+       }       
+       // Perform all subsequent queries with addition of updated maximum_tweet_id
+       while ($query_count<=$limit) {
+         $query_count+=1;
+         echo 'Request #: '.$query_count.'<br>';
+         // Perform subsequent query with max_id
+         $getfield ="?result_type=$result_type&geocode=".$this->latitude.",".$this->longitude.",".$distance_km."mi&include_entities=false&max_id=$max_id&count=$count";
+         $tweets = json_decode($twitter->setGetfield($getfield)
+                      ->buildOauth($url, $requestMethod)
+                      ->performRequest());
+          echo 'Count Statuses: '.count($tweets->statuses).'<br>';
+          echo 'Max Tweet Id: '.$max_id.'<br>';
+         foreach ($tweets->statuses as $t) {
+           // check if tweet in valid time range
+           if ($t->created_at >= $valid_start && $t->created_at <= $valid_end)
+           {
+              $i = new Twitter();           $i->add($this->id,$t->id_str,$t->user->id_str,$t->user->screen_name,$t->created_at,(isset($t->text)?$t->text:''));
+           } else if ($t->created_at < $valid_start) {
+             // stop querying when earlier than valid_start
+             break;
+           }
+           $max_id = min($max_id,intval($t->id_str))-1;           
+         }       
+       } // end while 
+     }
+     
      public static function purge($moment_id) {
        Gram::deleteAll('moment_id='.$moment_id);
+       Twitter::deleteAll('moment_id='.$moment_id);
      }
      
 }

@@ -6,6 +6,7 @@ use Yii;
 use app\models\Moment;
 use app\models\MomentSearch;
 use app\models\Gram;
+use app\models\Twitter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -67,6 +68,20 @@ class MomentController extends Controller
           'moment_id'=>$id,
       ]);
     }
+
+    public function actionBrowse_twitter($id)
+    {
+      // browse twitter results for moment $id
+      $dataProvider = new ActiveDataProvider([
+          'query' => Twitter::find()->where(['moment_id'=>$id])->orderBy('tweeted_at ASC')
+      ]);
+
+      return $this->render('browse_twitter', [
+          'dataProvider' => $dataProvider,
+          'moment_id'=>$id,
+      ]);
+    }
+
     public function actionPurge($id)
     {
         Moment::purge($id);
@@ -80,6 +95,14 @@ class MomentController extends Controller
           $model->searchInstagram();
           return $this->redirect(['browse', 'id' => $model->id]);  
       }
+
+      public function actionTwitter($id)
+        {
+            $model = $this->findModel($id);
+            $model->searchTwitter();
+            return $this->redirect(['browse_twitter', 'id' => $model->id]);  
+        }
+
     /**
      * Creates a new Moment model.
      * If creation is successful, the browser will be redirected to the 'view' page.
