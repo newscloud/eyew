@@ -60,6 +60,11 @@ $config = [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                 ],
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['trace'],
+                    'logFile' => "@runtime/logs/trace.log"
+                ],
             ],
         ],
         'db' => require(__DIR__ . '/db.php'),

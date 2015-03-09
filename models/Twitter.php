@@ -93,7 +93,7 @@ class Twitter extends \yii\db\ActiveRecord
           $i->tweet_id = $tweet_id;
           $i->twitter_id = $twitter_id;
           $i->screen_name = $screen_name;
-          $i->tweeted_at = strtotime($tweeted_at);
+          $i->tweeted_at = $tweeted_at;
           $i->text = $text;        
           $i->save();
         }

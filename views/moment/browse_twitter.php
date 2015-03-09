@@ -11,6 +11,12 @@ $this->title = 'Tweets';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="twitter-index">
+  <?php 
+  if(Yii::$app->session->hasFlash('error')): ?>
+          <div class="alert alert-danger">
+          <?php echo Yii::$app->session->getFlash('error'); ?>
+          </div>
+          <?php endif; ?>
 
     <h1><?= Html::encode($this->title) ?></h1>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>

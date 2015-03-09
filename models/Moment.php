@@ -134,6 +134,7 @@ class Moment extends \yii\db\ActiveRecord
      }
      
      public function searchTwitter() {
+       Yii::trace('start searchTwitter '.date('y-m-d h:m '));
        // Load your Twitter application keys
        $settings = array(
            'oauth_access_token' => \Yii::$app->params['twitter']['oauth_token'],
@@ -155,7 +156,8 @@ class Moment extends \yii\db\ActiveRecord
        $valid_start = $this->start_at;
        // $until_date and $valid_end = // start time + duration
        $valid_end = $this->start_at + ($this->duration*60);
-       $until_date = date('Y-m-d',$valid_end); 
+       Yii::trace( 'Valid Range: '.$valid_start.' -> '.$valid_end);
+       $until_date = date('Y-m-d',$valid_end+(24*3600)); // add one day 
        $distance_km = $this->distance/1000; // distance in km
        // Unused: &since=$since_date
        // $since_date = '2015-03-05'; 
@@ -164,17 +166,21 @@ class Moment extends \yii\db\ActiveRecord
        $tweets = json_decode($twitter->setGetfield($getfield)
                     ->buildOauth($url, $requestMethod)
                     ->performRequest());
-                  var_dump($tweets);
-                  die();
+        if (isset($tweets->errors)) {
+          Yii::$app->session->setFlash('error', 'Twitter Rate Limit Reached.');
+          Yii::error($tweets->errors[0]->message);
+          return;
+        }
        $max_id = 0;
-       echo 'Count Statuses: '.count($tweets->statuses).'<br>';
-       echo 'Max Tweet Id: '.$max_id.'<br>';
+       Yii::trace( 'Count Statuses: '.count($tweets->statuses));
+       Yii::trace( 'Max Tweet Id: '.$max_id);
        foreach ($tweets->statuses as $t) {
          // check if tweet in valid time range
-         if ($t->created_at >= $valid_start && $t->created_at <= $valid_end)
+         $unix_created_at = strtotime($t->created_at);
+         if ($unix_created_at >= $valid_start && $unix_created_at <= $valid_end)
          {
-           // print_r($t);echo "<br><br>";                  
-            $i = new Twitter();           $i->add($this->id,$t->id_str,$t->user->id_str,$t->user->screen_name,$t->created_at,(isset($t->text)?$t->text:''));
+           // print_r($t);
+            $i = new Twitter();           $i->add($this->id,$t->id_str,$t->user->id_str,$t->user->screen_name,$unix_created_at,(isset($t->text)?$t->text:''));
          }
          if ($max_id ==0) {
            $max_id = intval($t->id_str);
@@ -185,25 +191,35 @@ class Moment extends \yii\db\ActiveRecord
        // Perform all subsequent queries with addition of updated maximum_tweet_id
        while ($query_count<=$limit) {
          $query_count+=1;
-         echo 'Request #: '.$query_count.'<br>';
+         Yii::trace( 'Request #: '.$query_count);
          // Perform subsequent query with max_id
          $getfield ="?result_type=$result_type&geocode=".$this->latitude.",".$this->longitude.",".$distance_km."mi&include_entities=false&max_id=$max_id&count=$count";
          $tweets = json_decode($twitter->setGetfield($getfield)
                       ->buildOauth($url, $requestMethod)
                       ->performRequest());
-          echo 'Count Statuses: '.count($tweets->statuses).'<br>';
-          echo 'Max Tweet Id: '.$max_id.'<br>';
+          if (isset($tweets->errors)) {
+            Yii::$app->session->setFlash('error', 'Twitter Rate Limit Reached.');
+            Yii::error($tweets->errors[0]->message);
+            return;
+          }
+          Yii::trace( 'Count Statuses: '.count($tweets->statuses));
+          Yii::trace( 'Max Tweet Id: '.$max_id);
          foreach ($tweets->statuses as $t) {
            // check if tweet in valid time range
-           if ($t->created_at >= $valid_start && $t->created_at <= $valid_end)
+           $unix_created_at = strtotime($t->created_at);
+           if ($unix_created_at >= $valid_start && $unix_created_at <= $valid_end)
            {
-              $i = new Twitter();           $i->add($this->id,$t->id_str,$t->user->id_str,$t->user->screen_name,$t->created_at,(isset($t->text)?$t->text:''));
+              $i = new Twitter();           $i->add($this->id,$t->id_str,$t->user->id_str,$t->user->screen_name,$unix_created_at,(isset($t->text)?$t->text:''));
            } else if ($t->created_at < $valid_start) {
              // stop querying when earlier than valid_start
-             break;
+             return;
            }
            $max_id = min($max_id,intval($t->id_str))-1;           
          }       
+         if (count($tweets->statuses)<($count-1)) {
+           // when the api has found everything, exit
+           break;
+         }
        } // end while 
      }
      
