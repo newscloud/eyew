@@ -134,6 +134,7 @@ class Moment extends \yii\db\ActiveRecord
      }
      
      public function searchTwitter() {
+       date_default_timezone_set('America/Los_Angeles');       
        Yii::trace('start searchTwitter '.date('y-m-d h:m '));
        // Load your Twitter application keys
        $settings = array(
@@ -176,48 +177,60 @@ class Moment extends \yii\db\ActiveRecord
        Yii::trace( 'Max Tweet Id: '.$max_id);
        foreach ($tweets->statuses as $t) {
          // check if tweet in valid time range
-         $unix_created_at = strtotime($t->created_at);
+         $unix_created_at = strtotime($t->created_at);         
+         Yii::trace('Tweet @ '.$t->created_at.' '.$unix_created_at.':'.$t->user->screen_name.' '.(isset($t->text)?$t->text:''));
          if ($unix_created_at >= $valid_start && $unix_created_at <= $valid_end)
          {
            // print_r($t);
             $i = new Twitter();           $i->add($this->id,$t->id_str,$t->user->id_str,$t->user->screen_name,$unix_created_at,(isset($t->text)?$t->text:''));
-         }
+         }        
          if ($max_id ==0) {
            $max_id = intval($t->id_str);
          } else {
            $max_id = min($max_id, intval($t->id_str));
          }
-       }       
+       }
+       $count_repeat_max =0;
        // Perform all subsequent queries with addition of updated maximum_tweet_id
        while ($query_count<=$limit) {
+         $prior_max_id = $max_id;
          $query_count+=1;
          Yii::trace( 'Request #: '.$query_count);
+         
          // Perform subsequent query with max_id
          $getfield ="?result_type=$result_type&geocode=".$this->latitude.",".$this->longitude.",".$distance_km."mi&include_entities=false&max_id=$max_id&count=$count";
+         
          $tweets = json_decode($twitter->setGetfield($getfield)
                       ->buildOauth($url, $requestMethod)
                       ->performRequest());
+
           if (isset($tweets->errors)) {
             Yii::$app->session->setFlash('error', 'Twitter Rate Limit Reached.');
             Yii::error($tweets->errors[0]->message);
             return;
           }
+          // sometimes twitter api fails
+          if (!isset($tweets->statuses)) continue;
+          
           Yii::trace( 'Count Statuses: '.count($tweets->statuses));
           Yii::trace( 'Max Tweet Id: '.$max_id);
-         foreach ($tweets->statuses as $t) {
+         foreach ($tweets->statuses as $t) {           
            // check if tweet in valid time range
            $unix_created_at = strtotime($t->created_at);
            if ($unix_created_at >= $valid_start && $unix_created_at <= $valid_end)
            {
               $i = new Twitter();           $i->add($this->id,$t->id_str,$t->user->id_str,$t->user->screen_name,$unix_created_at,(isset($t->text)?$t->text:''));
-           } else if ($t->created_at < $valid_start) {
+           } else if ($unix_created_at < $valid_start) {
              // stop querying when earlier than valid_start
              return;
            }
-           $max_id = min($max_id,intval($t->id_str))-1;           
+           $max_id = min($max_id,intval($t->id_str))-1;
          }       
-         if (count($tweets->statuses)<($count-1)) {
-           // when the api has found everything, exit
+         if ($prior_max_id - $max_id <=1 OR count($tweets->statuses)<1) {
+           $count_repeat_max+=1;
+         }           
+         if ($count_repeat_max>5) {           
+           // when the api isn't returning more results
            break;
          }
        } // end while 
