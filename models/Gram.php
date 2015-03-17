@@ -4,6 +4,8 @@ namespace app\models;
 
 use Yii;
 use yii\db\ActiveRecord;
+use Instagram;
+
 /**
  * This is the model class for table "Gram".
  *
@@ -93,4 +95,19 @@ class Gram extends \yii\db\ActiveRecord
       }
     }
     
+    public function searchPopular() {      
+       $instagram = new Instagram\Instagram;
+       $instagram->setClientID( \Yii::$app->params['instagram']['client_id'] );
+       $media = $instagram->getPopularMedia(); 
+       return $media;
+     }
+
+     public function lookup($id) {      
+        $instagram = new Instagram\Instagram;
+        $instagram->setClientID( \Yii::$app->params['instagram']['client_id'] );
+        $media = $instagram->getMedia( $id ); 
+        return $media;
+      }
+     
+     
 }

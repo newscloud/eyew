@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\models\Gram;
 use app\models\Instagram;
 use app\models\InstagramSearch;
 use yii\web\Controller;
@@ -12,7 +13,7 @@ use yii\filters\VerbFilter;
 /**
  * InstagramController implements the CRUD actions for Instagram model.
  */
-class InstagramController extends Controller
+class GramController extends Controller
 {
     public function behaviors()
     {
@@ -26,6 +27,22 @@ class InstagramController extends Controller
         ];
     }
 
+    public function actionPopular()
+    {
+      $gram = new Gram();
+      $media = $gram->searchPopular();
+      return $this->render('popular', [
+          'media' => $media,
+      ]);
+    }
+    
+    public function actionLookup($id)
+    {
+      $gram = new Gram();
+      $media = $gram->lookup($id);
+      print_r($media);
+    }
+    
     /**
      * Lists all Instagram models.
      * @return mixed
